@@ -67,6 +67,10 @@
     <string name="borrar_todos">Delete Everithing</string>
     <string name="delete_just_this">Only this</string>
     <string name="confirmar">effectuate</string>
+    <string name="changing_repetition_message">You are changing a repeated transaction</string>
+    <string name="changing_repetition_message_title">Mofi</string>
+    <string name="change_all">This and future ones</string>
+    <string name="change_just_this">Just this</string>
     <string-array name="repetition_array">
         <item>None</item>
         <item>Daily</item>
