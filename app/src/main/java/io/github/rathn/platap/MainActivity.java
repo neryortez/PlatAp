@@ -186,18 +186,18 @@ public class MainActivity extends AppCompatActivity
         mDatabaseManager.close();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        cambiarTitulo();
-    }
-
     void cambiarTitulo() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(calendarView.getFirstDayOfCurrentMonth().getTime());
         toolbar.setTitle(calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).toUpperCase() +
                 " - " +
                 calendar.get(Calendar.YEAR));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        cambiarTitulo();
     }
 
     @Override
