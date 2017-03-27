@@ -481,23 +481,20 @@ public class TransactionsContract extends BaseContract {
 
     public static int deleteRepeatingTransactions(SQLiteDatabase database, Transaction transaction, boolean inMemory) {
         ContentValues values = new ContentValues();
-        values.put(TransactionEntry.COLUMN_UPDATE_DATE, Long.valueOf(BaseContract.getUpdateDate()));
-        values.put(TransactionEntry.COLUMN_DELETED, Integer.valueOf(1));
-        StringBuffer whereClause = new StringBuffer();
-        whereClause.append(TransactionEntry.COLUMN_ORIGINAL_TRANSACTION_ID).append(" = ?");
+        values.put(TransactionEntry.COLUMN_UPDATE_DATE, BaseContract.getUpdateDate());
+        values.put(TransactionEntry.COLUMN_DELETED, 1);
         String originalTransactionId = transaction.isOriginal() ? transaction.getId() : transaction.getOriginalTransactionId();
-        return database.update(TransactionEntry.getTableName(inMemory), values, whereClause.toString(), new String[]{originalTransactionId});
+        return database.update(TransactionEntry.getTableName(inMemory), values, TransactionEntry.COLUMN_ORIGINAL_TRANSACTION_ID + " = ?", new String[]{originalTransactionId});
     }
 
     public static int deleteRepeatingTransactions(SQLiteDatabase database, Transaction transaction, Calendar fromDate, boolean inMemory) {
         ContentValues values = new ContentValues();
-        values.put(TransactionEntry.COLUMN_UPDATE_DATE, Long.valueOf(BaseContract.getUpdateDate()));
-        values.put(TransactionEntry.COLUMN_DELETED, Integer.valueOf(1));
-        StringBuffer whereClause = new StringBuffer();
-        whereClause.append(TransactionEntry.COLUMN_ORIGINAL_TRANSACTION_ID).append(" = ? AND ");
-        whereClause.append(TransactionEntry.COLUMN_DATE).append(" >= ?");
+        values.put(TransactionEntry.COLUMN_UPDATE_DATE, BaseContract.getUpdateDate());
+        values.put(TransactionEntry.COLUMN_DELETED, 1);
+        String whereClause = TransactionEntry.COLUMN_ORIGINAL_TRANSACTION_ID + " = ? AND " +
+                TransactionEntry.COLUMN_DATE + " >= ?";
         String originalTransactionId = transaction.isOriginal() ? transaction.getId() : transaction.getOriginalTransactionId();
-        return database.update(TransactionEntry.getTableName(inMemory), values, whereClause.toString(), new String[]{originalTransactionId, Long.toString(DateTimeUtils.getServerSpecificGmtTimeFromLocalDate(fromDate))});
+        return database.update(TransactionEntry.getTableName(inMemory), values, whereClause, new String[]{originalTransactionId, Long.toString(DateTimeUtils.getServerSpecificGmtTimeFromLocalDate(fromDate))});
     }
 
     public static void deleteTransactionsForUser(SQLiteDatabase database, int userId, long toDate) {

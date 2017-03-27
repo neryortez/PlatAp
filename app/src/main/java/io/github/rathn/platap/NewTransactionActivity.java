@@ -188,8 +188,8 @@ public class NewTransactionActivity extends AppCompatActivity {
                     transaction.setId(transactionID);
                 } else {
                     if (transaction.isRepeating()) {
-                        new AlertDialog.Builder(getApplicationContext())
-                                .setMessage(R.string.changing_repetition_message_title)
+                        new AlertDialog.Builder(NewTransactionActivity.this)
+                                .setTitle(R.string.changing_repetition_message_title)
                                 .setMessage(R.string.changing_repetition_message)
                                 .setPositiveButton(R.string.change_all, new DialogInterface.OnClickListener() {
                                     @Override
@@ -210,7 +210,6 @@ public class NewTransactionActivity extends AppCompatActivity {
                     }
                 }
                 continueAdding();
-//            NewTransactionActivity.this.finish();
             }
             //</editor-fold>
         }
@@ -335,6 +334,7 @@ public class NewTransactionActivity extends AppCompatActivity {
             return false;
         }
     };
+    private Transaction originalTransaction;
 
     @Override
     protected void onPause() {
@@ -401,6 +401,7 @@ public class NewTransactionActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null) {
             if (getIntent().getExtras().getParcelable(TRANSACTION_TO_EDIT) != null) {
                 parcelable = getIntent().getExtras().getParcelable(TRANSACTION_TO_EDIT);
+                originalTransaction = ((Transaction) parcelable).copy();
                 transaction = ((Transaction) parcelable).copy();
                 transactionID = transaction.getId();
                 Calendar date = transaction != null ? transaction.getDate() : null;
@@ -415,6 +416,7 @@ public class NewTransactionActivity extends AppCompatActivity {
                 transaction.setRepeatInfo(repeatInfo);
                 if (repeatInfo != null) {
                     repeatUUID = repeatInfo.getId();
+                    originalTransaction.setRepeatInfo(new RepeatInfo(repeatInfo));
                 } else repeatUUID = UUID.randomUUID().toString();
             } else {
                 viewsBinding.calendarView.setDate(getIntent().getLongExtra(TIME, Calendar.getInstance().getTimeInMillis()));
@@ -549,7 +551,7 @@ public class NewTransactionActivity extends AppCompatActivity {
         }
         transaction.setRepeatInfo(repeatInfo);
         if (isChanging) {
-            databaseManager.updateTransaction(transaction, transaction, onlyThis);
+            databaseManager.updateTransaction(originalTransaction, transaction, onlyThis);
         } else {
             databaseManager.insertTransaction(transaction);
         }
@@ -689,9 +691,10 @@ public class NewTransactionActivity extends AppCompatActivity {
                     // Image captured and saved to fileUri specified in the Intent
                     Toast.makeText(this, "Image saved to:\n" +
                             mCurrentPhotoPath, Toast.LENGTH_LONG).show();
+                    Log.i("TAG", "onActivityResult: addng photo Taken");
                     Factura factura = new Factura(mCurrentPhotoPath, transactionID, UUID.randomUUID().toString());
                     transaction.addFactura(factura);
-                    viewsBinding.recyclerFacturas.getAdapter().notifyItemInserted(transaction.getFacturas().size() - 1);
+                    viewsBinding.recyclerFacturas.getAdapter().notifyDataSetChanged(/*transaction.getFacturas().size() - 1*/);
                 } else if (resultCode == RESULT_CANCELED) {
                     // User cancelled the image capture
                     Toast.makeText(this, "Image not saved CANCEKLED", Toast.LENGTH_LONG).show();
@@ -718,7 +721,8 @@ public class NewTransactionActivity extends AppCompatActivity {
                     }
                     Factura factura = new Factura(mCurrentPhotoPath, transactionID, UUID.randomUUID().toString());
                     transaction.addFactura(factura);
-                    viewsBinding.recyclerFacturas.getAdapter().notifyItemInserted(transaction.getFacturas().size() - 1);
+                    Log.i("TAG", "onActivityResult: adding photo");
+                    viewsBinding.recyclerFacturas.getAdapter().notifyDataSetChanged(/*transaction.getFacturas().size() - 1*/);
                 } else if (resultCode != RESULT_CANCELED) {
                     Snackbar.make(viewsBinding.transactionToolbar, R.string.image_selector_error, Snackbar.LENGTH_SHORT).show();
                 }

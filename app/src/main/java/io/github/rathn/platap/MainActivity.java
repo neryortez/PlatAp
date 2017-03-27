@@ -159,8 +159,8 @@ public class MainActivity extends AppCompatActivity
             double balance = mDatabaseManager.getBalance(calendarId, DateTimeUtils.getCurrentDateWithoutTime()/*(DateTimeUtils.getCalendarFromDate(calendarView.getCurrentDate()))*/, false);
             calendarView.setBalanceForToday(balance);
             calendarView.transactionUpdate(diaActual);
-            if(calendarMenu.getItem(calendarAccount.getOrder()).getActionView() instanceof TextView){
-                ((TextView) calendarMenu.getItem(calendarAccount.getOrder()).getActionView()).setText(String.valueOf(balance));
+            if(calendarMenu.findItem(calendarAccount.getOrder()).getActionView() instanceof TextView){
+                ((TextView) calendarMenu.findItem(calendarAccount.getOrder()).getActionView()).setText(String.valueOf(balance));
             }
         }
         if (calendarReInsertedPending) {
@@ -481,8 +481,8 @@ public class MainActivity extends AppCompatActivity
                         double balance = mDatabaseManager.getBalance(calendarId, DateTimeUtils.getCurrentDateWithoutTime()/*(DateTimeUtils.getCalendarFromDate(calendarView.getCurrentDate()))*/, false);
                         calendarView.setBalanceForToday(balance);
                         calendarView.transactionUpdate(diaActual);
-                        if(calendarMenu.getItem(calendarAccount.getOrder()).getActionView() instanceof TextView){
-                            ((TextView) calendarMenu.getItem(calendarAccount.getOrder()).getActionView()).setText(String.valueOf(balance));
+                        if(calendarMenu.findItem(calendarAccount.getOrder()).getActionView() instanceof TextView){
+                            ((TextView) calendarMenu.findItem(calendarAccount.getOrder()).getActionView()).setText(String.valueOf(balance));
                         }
                     } else {
                         calendarView.setUpdatePending(true);

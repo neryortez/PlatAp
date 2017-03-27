@@ -367,13 +367,6 @@ public class DatabaseManager {
         } else {
             updateSimpleTransaction(oldTransaction, newTransaction);
         }
-        try {
-            Map<String, String> parameters = new HashMap();
-//            parameters.put(FlurryManager.VALUE_UPDATE_TRANSACTION_CALENDAR_CHANGED, oldTransaction.getCalendarId().equals(newTransaction.getCalendarId()) ? FlurryManager.VALUE_UPDATE_TRANSACTION_CALENDAR_NOT_CHANGED : FlurryManager.VALUE_UPDATE_TRANSACTION_CALENDAR_CHANGED);
-//            FlurryManager.log(FlurryManager.EVENT_EDIT_TRANSACTION, parameters);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private void updateSimpleTransaction(Transaction oldTransaction, Transaction newTransaction) {

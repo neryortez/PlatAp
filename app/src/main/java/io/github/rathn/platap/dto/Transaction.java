@@ -107,6 +107,11 @@ public class Transaction implements Parcelable {
         this.category = category;
     }
 
+    /**
+     * Creates a copy of the Transaction. This copy will should be used to modify repeated transactions
+     * in memory.
+     * @return The copy of the Transaction
+     */
     public Transaction copy() {
         Transaction transaction = new Transaction();
         transaction.setId(this.id);
@@ -121,7 +126,7 @@ public class Transaction implements Parcelable {
         transaction.setRepeatInfoId(this.repeatInfoId);
         transaction.setReminderId(this.reminderId);
         transaction.setDeviceId(this.deviceId);
-        transaction.setOriginalTransactionId(this.id);
+        transaction.setOriginalTransactionId(this.originalTransactionId);
         transaction.setFacturasId(this.facturasId);
         return transaction;
     }
@@ -602,6 +607,9 @@ public class Transaction implements Parcelable {
     }
 
     public List<Factura> getFacturas() {
+        if (facturas != null && facturas.size() >0) {
+            facturas.remove(0);
+        }
         return facturas;
     }
 
