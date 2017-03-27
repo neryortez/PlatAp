@@ -306,6 +306,10 @@ public class NewTransactionActivity extends AppCompatActivity {
                 transaction.setPrice(Double.parseDouble(viewsBinding.monto.getText().toString()));
                 if (!isChanging) {
                     transaction.setId(transactionID);
+                } else{
+                    if (transaction.isRepeating()) {
+                        //TODO: Ayudar a que si se es repetida, se hagan los cambios en las proximas o solo en esta.
+                    }
                 }
                 Calendar raitNau = Calendar.getInstance();
                 Calendar d = Calendar.getInstance();
