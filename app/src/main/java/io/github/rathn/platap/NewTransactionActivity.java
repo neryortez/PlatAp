@@ -79,22 +79,262 @@ public class NewTransactionActivity extends AppCompatActivity {
     public static final String CALENDAR = "calendar";
     public static final String TIME = "time";
     public static final String REPEATINFO_OF_TRANSACTION = "repeatInfo_of_transaction";
-
-
+    static final int REQUEST_TAKE_PHOTO = 100;
+    static final int REQUEST_IMAGE_GET = 200;
     Transaction transaction = new Transaction();
-    private Account calendar;
     DatabaseManager databaseManager;
-
-    private boolean isChanging;
-
     SpinnerAdapter spinnerAdapter;
 
     NewActivityNewTransactionBinding viewsBinding;
+    /**
+     * Beginning of the Facturas Files Handling
+     ****************************************************************/
+
+    String mCurrentPhotoPath;
+    private Account calendar;
+    private boolean isChanging;
     private boolean pendingChange;
     private String transactionID;
     private ArrayList<String> mPhotosPath = new ArrayList<>();
+    private boolean onlyThis = false;
+    private CompoundButton.OnCheckedChangeListener toggleListener = new CompoundButton.OnCheckedChangeListener() {
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            spinnerAdapter.clear();
+            viewsBinding.spinner.setSelection(0, true);
+            if (isChecked) {
+                spinnerAdapter.addAll(databaseManager.getIncomeCategories());
+                String prev = viewsBinding.monto.getText().toString();
+                if (prev.startsWith("-")) {
+                    viewsBinding.monto.setText(prev.substring(1));
+                }
+            } else {
+                spinnerAdapter.addAll(databaseManager.getExpenseCategories());
+                String prev = viewsBinding.monto.getText().toString();
+                if (!prev.contains("-")) {
+                    try {
+                        String nuevo = "-" + prev;
+                        viewsBinding.monto.setText(nuevo);
+                    } catch (IndexOutOfBoundsException e) {
+                        viewsBinding.monto.setText("-0.0");
+                    }
+                }
+            }
+            spinnerAdapter.notifyDataSetChanged();
+        }
+    };
+    private TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
+        }
 
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            String prev = s.toString();
+            boolean isExpense = prev.startsWith("-");
+            if (isExpense) {
+                prev = prev.substring(1);
+            }
+
+            if (prev.startsWith(".")) {             /** Evitar los numero enteros iniciando en punto sin cero*/
+                prev = "0" + prev;
+
+                if (isExpense) prev = "-" + prev;
+//                s.clear();
+                s.replace(0, s.length(), prev);
+            } else if (prev.startsWith("0") && prev.indexOf(".") != 1) { /** Evitar los numeros enteros iniciando en cero */
+                prev = prev.substring(1);
+
+                if (isExpense) prev = "-" + prev;
+                s.replace(0, s.length(), prev);
+            } else if (s.toString().isEmpty() && !viewsBinding.toggleButton.isChecked()) { /** Evitar qeu borren el '-' si es en gastos */
+                s.append("-");
+            } else if (s.toString().contains("-") && viewsBinding.toggleButton.isChecked()) { /** Evitar que pongan '-' si es entrada */
+                s.replace(0, s.length(), s.toString(), 1, s.length());
+            } else if (!s.toString().contains("-") && !viewsBinding.toggleButton.isChecked()) { /** Evitar que numeros positivos en gastos */
+                s.replace(0, s.length(), "-" + s.toString(), 0, s.length() + 1);
+            } /*else if ( prev.isEmpty() ){                                           *//** Evitar numeros vacios *//*
+                s.replace(0, s.length(), viewsBinding.toggleButton.isChecked() ? "0" : "-0");
+            }*/
+            viewsBinding.textInputLayout.setErrorEnabled(false);
+        }
+    };
+    private RepeatInfo repeatInfo;
+    View.OnClickListener addNewTransaction = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            //<editor-fold desc="Process to add a new transaction, change the transaction, get the information from the activity up to the point of calling the databaseManager">
+            Float aFloat;
+            try {
+                aFloat = Float.valueOf(viewsBinding.monto.getText().toString());
+            } catch (NumberFormatException e) {
+                Snackbar.make(viewsBinding.toggleButton, R.string.error_format_number, Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+            if (aFloat == 0f) {
+                viewsBinding.textInputLayout.setError(getString(R.string.monto_error_msg));
+                requestFocus(viewsBinding.monto);
+                Snackbar.make(viewsBinding.toggleButton, R.string.error_zero_amount, Snackbar.LENGTH_SHORT).show();
+            } else {
+                transaction.setCalendar(calendar);
+//                t.setCategory(databaseManager.getFirstExepenseCategory());
+                transaction.setPrice(Double.parseDouble(viewsBinding.monto.getText().toString()));
+                if (!isChanging) {
+                    transaction.setId(transactionID);
+                } else {
+                    if (transaction.isRepeating()) {
+                        new AlertDialog.Builder(NewTransactionActivity.this)
+                                .setTitle(R.string.changing_repetition_message_title)
+                                .setMessage(R.string.changing_repetition_message)
+                                .setPositiveButton(R.string.change_all, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        onlyThis = false;
+                                        continueAdding();
+                                    }
+                                })
+                                .setNegativeButton(R.string.change_just_this, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        onlyThis = true;
+                                        continueAdding();
+                                    }
+                                })
+                                .show();
+                        return;
+                    }
+                }
+                continueAdding();
+            }
+            //</editor-fold>
+        }
+    };
+    private String repeatUUID;
+    private AdapterView.OnItemSelectedListener repeatClickListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            repeatInfo = new RepeatInfo();
+            repeatInfo.setId(repeatUUID);
+            String rep = parent.getItemAtPosition(position).toString();
+            String[] a = getResources().getStringArray(R.array.repetition_array);
+            int i = 0;
+            for (String b :
+                    a) {
+                if (b.equals(rep)) {
+                    break;
+                }
+                i++;
+            }
+            int repeatType = 0;
+            int interval = 0;
+            switch (i) {
+                case 1:/*<item>Diariamente</item>*/
+                    repeatType = TYPE_DAYLY;
+                    interval = 1;
+                    break;
+                case 2:/*<item>Día de por medio</item>*/
+                    repeatType = TYPE_DAYLY;
+                    interval = 2;
+                    break;
+                case 3:/*<item>Días de semana</item> */
+                    repeatType = TYPE_IRREGULAR;
+                    interval = INTERVAL_WEEK_DAY;
+                    break;
+                case 4:/*<item>Fines de semana</item> */
+                    repeatType = TYPE_IRREGULAR;
+                    interval = INTERVAL_WEEKENS;
+                    break;
+                case 5:/*<item>Semanalmente</item>     */
+                    repeatType = TYPE_DAYLY;
+                    interval = 7;
+                    break;
+                case 6:/*<item>Cada dos semanas</item> */
+                    repeatType = TYPE_DAYLY;
+                    interval = 14;
+                    break;
+                case 7: /*<item>Mensualmente</item>*//*   */
+                    repeatType = TYPE_MONTHLY;
+                    interval = 1;
+                    break;
+                case 0: /*None*/
+                    repeatInfo = null;
+                    return;
+            }
+            repeatInfo.setRepeat(repeatType, interval);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    };
+    private DialogInterface.OnClickListener categoriaExpenseSeleccionadaListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            Category category = databaseManager.getExpenseCategories().get(which);
+            Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
+            intent.putExtra(NewCategoryActivity.CATEGORY_TO_EDIT, category);
+            intent.putExtra(NewCategoryActivity.POSICION_DE_CATEGORIA, which);
+            startActivity(intent);
+        }
+    };
+    private DialogInterface.OnClickListener categoriaIncomeSeleccionadaListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            Category category = databaseManager.getIncomeCategories().get(which);
+            Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
+            intent.putExtra(NewCategoryActivity.CATEGORY_TO_EDIT, category);
+            intent.putExtra(NewCategoryActivity.POSICION_DE_CATEGORIA, which);
+            startActivity(intent);
+        }
+    };
+    private PopupMenu.OnMenuItemClickListener categoriesPopupListener = new PopupMenu.OnMenuItemClickListener() {
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            String string = item.getTitle().toString();
+            if (string.equals(getString(R.string.create_category))) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
+                builder.setTitle(R.string.message_category_select)
+                        .setItems(R.array.category_new_select, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
+                                intent.putExtra(NewCategoryActivity.IS_EXPENSE, which != 0);
+                                startActivity(intent);
+                            }
+                        })
+                        .create()
+                        .show();
+
+                return true;
+            } else if (string.equals(getString(R.string.modify_categories))) {
+                PopupMenu popup = new PopupMenu(NewTransactionActivity.this, viewsBinding.space);
+                popup.getMenu().add(R.string.Gasto);
+                popup.getMenu().add(R.string.Income);
+
+                popup.setOnMenuItemClickListener(categoriesPopupListener);
+                popup.show();
+            } else if (string.equals(getString(R.string.Gasto))) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
+                builder.setTitle(R.string.select_a_category).setItems(databaseManager.getExpenseCategoriesString(), categoriaExpenseSeleccionadaListener)
+                        .create()
+                        .show();
+            } else if (string.equals(getString(R.string.Income))) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
+                builder.setTitle(R.string.select_a_category).setItems(databaseManager.getIncomeCategoriesString(), categoriaIncomeSeleccionadaListener)
+                        .create()
+                        .show();
+
+            }
+            return false;
+        }
+    };
+    private Transaction originalTransaction;
 
     @Override
     protected void onPause() {
@@ -161,6 +401,7 @@ public class NewTransactionActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null) {
             if (getIntent().getExtras().getParcelable(TRANSACTION_TO_EDIT) != null) {
                 parcelable = getIntent().getExtras().getParcelable(TRANSACTION_TO_EDIT);
+                originalTransaction = ((Transaction) parcelable).copy();
                 transaction = ((Transaction) parcelable).copy();
                 transactionID = transaction.getId();
                 Calendar date = transaction != null ? transaction.getDate() : null;
@@ -173,8 +414,10 @@ public class NewTransactionActivity extends AppCompatActivity {
                 calendar = databaseManager.getCalendarWithId(transaction.getCalendarId());
                 repeatInfo = getIntent().getExtras().getParcelable(REPEATINFO_OF_TRANSACTION);
                 transaction.setRepeatInfo(repeatInfo);
-                if (repeatInfo != null) repeatUUID = repeatInfo.getId();
-                else repeatUUID = UUID.randomUUID().toString();
+                if (repeatInfo != null) {
+                    repeatUUID = repeatInfo.getId();
+                    originalTransaction.setRepeatInfo(new RepeatInfo(repeatInfo));
+                } else repeatUUID = UUID.randomUUID().toString();
             } else {
                 viewsBinding.calendarView.setDate(getIntent().getLongExtra(TIME, Calendar.getInstance().getTimeInMillis()));
                 isChanging = false;
@@ -283,199 +526,38 @@ public class NewTransactionActivity extends AppCompatActivity {
         viewsBinding.recyclerFacturas.setAdapter(adapter);
     }
 
-
-    private boolean onlyThis = false;
-    View.OnClickListener addNewTransaction = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            //<editor-fold desc="Process to add a new transaction, change the transaction, get the information from the activity up to the point of calling the databaseManager">
-            Float aFloat;
-            try {
-                aFloat = Float.valueOf(viewsBinding.monto.getText().toString());
-            } catch (NumberFormatException e) {
-                Snackbar.make(viewsBinding.toggleButton, R.string.error_format_number, Snackbar.LENGTH_SHORT).show();
-                return;
-            }
-            if (aFloat == 0f) {
-                viewsBinding.textInputLayout.setError(getString(R.string.monto_error_msg));
-                requestFocus(viewsBinding.monto);
-                Snackbar.make(viewsBinding.toggleButton, R.string.error_zero_amount, Snackbar.LENGTH_SHORT).show();
-            } else {
-                transaction.setCalendar(calendar);
-//                t.setCategory(databaseManager.getFirstExepenseCategory());
-                transaction.setPrice(Double.parseDouble(viewsBinding.monto.getText().toString()));
-                if (!isChanging) {
-                    transaction.setId(transactionID);
-                }
-                Calendar raitNau = Calendar.getInstance();
-                Calendar d = Calendar.getInstance();
+    private void continueAdding() {
+        Calendar raitNau = Calendar.getInstance();
+        Calendar d = Calendar.getInstance();
            /* d.set(YEAR, datePicker.getYear());
             d.set(Calendar.MONTH, datePicker.getMonth());
             d.set(Calendar.DATE, datePicker.getDayOfMonth());*/
-                d.setTimeInMillis(viewsBinding.calendarView.getDate());
+        d.setTimeInMillis(viewsBinding.calendarView.getDate());
 
-                boolean fore = true;
-                if (DateTimeUtils.getCalendarToMidnight(raitNau).after(d)) {
-                    fore = false;
-                }
-                transaction.setForecasted(fore);
-                transaction.setDate(d);
-                transaction.setCategory((Category) viewsBinding.spinner.getSelectedItem());
-                transaction.setNote(viewsBinding.note.getEditText().getText().toString());
-                transaction.setExpense(!viewsBinding.toggleButton.isChecked());
-                if (repeatInfo != null) {
-                    repeatInfo.setStartDate(transaction.getDate());
-//                    repeatInfo.setEndDate(databaseManager.getMetaData().getRepeatingEndDate());
-                }
-                transaction.setRepeatInfo(repeatInfo);
-                if (isChanging) {
-                    databaseManager.open();
-
-                    databaseManager.updateTransaction(transaction, transaction, onlyThis);
-
-                    //                Intent in.tent = new Intent();
-                    //                intent.pu.tExtra(POSICION_DE_TRANSACTION, position);
-                    //                setResult(MODIFICADO_OK, intent);
-                }/* else setResult(RESULT_OK);*/ else {
-                    databaseManager.insertTransaction(transaction);
-                }
-//            NewTransactionActivity.this.finish();
+        boolean fore = true;
+        if (DateTimeUtils.getCalendarToMidnight(raitNau).after(d)) {
+            fore = false;
+        }
+        transaction.setForecasted(fore);
+        transaction.setDate(d);
+        transaction.setCategory((Category) viewsBinding.spinner.getSelectedItem());
+        transaction.setNote(viewsBinding.note.getEditText().getText().toString());
+        transaction.setExpense(!viewsBinding.toggleButton.isChecked());
+        if (repeatInfo != null) {
+            repeatInfo.setStartDate(transaction.getDate());
+            if (!isChanging) {
+                transaction.setOriginalTransactionId(transactionID);
             }
-            //</editor-fold>
         }
-    };
-
-
-    private CompoundButton.OnCheckedChangeListener toggleListener = new CompoundButton.OnCheckedChangeListener() {
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            spinnerAdapter.clear();
-            viewsBinding.spinner.setSelection(0, true);
-            if (isChecked) {
-                spinnerAdapter.addAll(databaseManager.getIncomeCategories());
-                String prev = viewsBinding.monto.getText().toString();
-                if (prev.startsWith("-")) {
-                    viewsBinding.monto.setText(prev.substring(1));
-                }
-            } else {
-                spinnerAdapter.addAll(databaseManager.getExpenseCategories());
-                String prev = viewsBinding.monto.getText().toString();
-                if (!prev.contains("-")) {
-                    try {
-                        String nuevo = "-" + prev;
-                        viewsBinding.monto.setText(nuevo);
-                    } catch (IndexOutOfBoundsException e) {
-                        viewsBinding.monto.setText("-0.0");
-                    }
-                }
-            }
-            spinnerAdapter.notifyDataSetChanged();
+        transaction.setRepeatInfo(repeatInfo);
+        if (isChanging) {
+            databaseManager.updateTransaction(originalTransaction, transaction, onlyThis);
+        } else {
+            databaseManager.insertTransaction(transaction);
         }
-    };
+    }
 
-    private TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            String prev = s.toString();
-            boolean isExpense = prev.startsWith("-");
-            if (isExpense) {
-                prev = prev.substring(1);
-            }
-
-            if (prev.startsWith(".")) {             /** Evitar los numero enteros iniciando en punto sin cero*/
-                prev = "0" + prev;
-
-                if (isExpense) prev = "-" + prev;
-//                s.clear();
-                s.replace(0, s.length(), prev);
-            } else if (prev.startsWith("0") && prev.indexOf(".") != 1) { /** Evitar los numeros enteros iniciando en cero */
-                prev = prev.substring(1);
-
-                if (isExpense) prev = "-" + prev;
-                s.replace(0, s.length(), prev);
-            } else if (s.toString().isEmpty() && !viewsBinding.toggleButton.isChecked()) { /** Evitar qeu borren el '-' si es en gastos */
-                s.append("-");
-            } else if (s.toString().contains("-") && viewsBinding.toggleButton.isChecked()) { /** Evitar que pongan '-' si es entrada */
-                s.replace(0, s.length(), s.toString(), 1, s.length());
-            } else if (!s.toString().contains("-") && !viewsBinding.toggleButton.isChecked()) { /** Evitar que numeros positivos en gastos */
-                s.replace(0, s.length(), "-" + s.toString(), 0, s.length() + 1);
-            } /*else if ( prev.isEmpty() ){                                           *//** Evitar numeros vacios *//*
-                s.replace(0, s.length(), viewsBinding.toggleButton.isChecked() ? "0" : "-0");
-            }*/
-            viewsBinding.textInputLayout.setErrorEnabled(false);
-        }
-    };
-
-    private RepeatInfo repeatInfo;
-    private String repeatUUID;
-    private AdapterView.OnItemSelectedListener repeatClickListener = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            repeatInfo = new RepeatInfo();
-            repeatInfo.setId(repeatUUID);
-            String rep = parent.getItemAtPosition(position).toString();
-            String[] a = getResources().getStringArray(R.array.repetition_array);
-            int i = 0;
-            for (String b :
-                    a) {
-                if (b.equals(rep)) {
-                    break;
-                }
-                i++;
-            }
-            int repeatType = 0;
-            int interval = 0;
-            switch (i) {
-                case 1:/*<item>Diariamente</item>*/
-                    repeatType = TYPE_DAYLY;
-                    interval = 1;
-                    break;
-                case 2:/*<item>Día de por medio</item>*/
-                    repeatType = TYPE_DAYLY;
-                    interval = 2;
-                    break;
-                case 3:/*<item>Días de semana</item> */
-                    repeatType = TYPE_IRREGULAR;
-                    interval = INTERVAL_WEEK_DAY;
-                    break;
-                case 4:/*<item>Fines de semana</item> */
-                    repeatType = TYPE_IRREGULAR;
-                    interval = INTERVAL_WEEKENS;
-                    break;
-                case 5:/*<item>Semanalmente</item>     */
-                    repeatType = TYPE_DAYLY;
-                    interval = 7;
-                    break;
-                case 6:/*<item>Cada dos semanas</item> */
-                    repeatType = TYPE_DAYLY;
-                    interval = 14;
-                    break;
-                case 7: /*<item>Mensualmente</item>*//*   */
-                    repeatType = TYPE_MONTHLY;
-                    interval = 1;
-                    break;
-                case 0: /*None*/
-                    repeatInfo = null;
-                    return;
-            }
-            repeatInfo.setRepeat(repeatType, interval);
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> parent) {
-
-        }
-    };
-
+    //</editor-fold>
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -516,96 +598,11 @@ public class NewTransactionActivity extends AppCompatActivity {
         popup.show();
     }
 
-    private PopupMenu.OnMenuItemClickListener categoriesPopupListener = new PopupMenu.OnMenuItemClickListener() {
-        @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            String string = item.getTitle().toString();
-            if (string.equals(getString(R.string.create_category))) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
-                builder.setTitle(R.string.message_category_select)
-                        .setItems(R.array.category_new_select, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
-                                intent.putExtra(NewCategoryActivity.IS_EXPENSE, which != 0);
-                                startActivity(intent);
-                            }
-                        })
-                        .create()
-                        .show();
-
-                return true;
-            } else if (string.equals(getString(R.string.modify_categories))) {
-                PopupMenu popup = new PopupMenu(NewTransactionActivity.this, viewsBinding.space);
-                popup.getMenu().add(R.string.Gasto);
-                popup.getMenu().add(R.string.Income);
-
-                popup.setOnMenuItemClickListener(categoriesPopupListener);
-                popup.show();
-            } else if (string.equals(getString(R.string.Gasto))) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
-                builder.setTitle(R.string.select_a_category).setItems(databaseManager.getExpenseCategoriesString(), categoriaExpenseSeleccionadaListener)
-                        .create()
-                        .show();
-            } else if (string.equals(getString(R.string.Income))) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(NewTransactionActivity.this);
-                builder.setTitle(R.string.select_a_category).setItems(databaseManager.getIncomeCategoriesString(), categoriaIncomeSeleccionadaListener)
-                        .create()
-                        .show();
-
-            }
-            return false;
-        }
-    };
-    private DialogInterface.OnClickListener categoriaExpenseSeleccionadaListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            Category category = databaseManager.getExpenseCategories().get(which);
-            Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
-            intent.putExtra(NewCategoryActivity.CATEGORY_TO_EDIT, category);
-            intent.putExtra(NewCategoryActivity.POSICION_DE_CATEGORIA, which);
-            startActivity(intent);
-        }
-    };
-    private DialogInterface.OnClickListener categoriaIncomeSeleccionadaListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            Category category = databaseManager.getIncomeCategories().get(which);
-            Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
-            intent.putExtra(NewCategoryActivity.CATEGORY_TO_EDIT, category);
-            intent.putExtra(NewCategoryActivity.POSICION_DE_CATEGORIA, which);
-            startActivity(intent);
-        }
-    };
-
-    //</editor-fold>
-
-
-    private class NewTransactionBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case TRANSACTIONS_UPDATED:
-                    NewTransactionActivity.this.finish();
-                    break;
-                case NewCategoryActivity.CATEGORIA_INSERTADA_COMPLETO:
-                    pendingChange = true;
-            }
-        }
-    }
-
     private void requestFocus(View view) {
         if (view.requestFocus()) {
             getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
     }
-
-
-    /**
-     * Beginning of the Facturas Files Handling
-     ****************************************************************/
-
-    String mCurrentPhotoPath;
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -686,9 +683,6 @@ public class NewTransactionActivity extends AppCompatActivity {
         }
     }
 
-    static final int REQUEST_TAKE_PHOTO = 100;
-    static final int REQUEST_IMAGE_GET = 200;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -697,9 +691,10 @@ public class NewTransactionActivity extends AppCompatActivity {
                     // Image captured and saved to fileUri specified in the Intent
                     Toast.makeText(this, "Image saved to:\n" +
                             mCurrentPhotoPath, Toast.LENGTH_LONG).show();
+                    Log.i("TAG", "onActivityResult: addng photo Taken");
                     Factura factura = new Factura(mCurrentPhotoPath, transactionID, UUID.randomUUID().toString());
                     transaction.addFactura(factura);
-                    viewsBinding.recyclerFacturas.getAdapter().notifyItemInserted(transaction.getFacturas().size() - 1);
+                    viewsBinding.recyclerFacturas.getAdapter().notifyDataSetChanged(/*transaction.getFacturas().size() - 1*/);
                 } else if (resultCode == RESULT_CANCELED) {
                     // User cancelled the image capture
                     Toast.makeText(this, "Image not saved CANCEKLED", Toast.LENGTH_LONG).show();
@@ -726,7 +721,8 @@ public class NewTransactionActivity extends AppCompatActivity {
                     }
                     Factura factura = new Factura(mCurrentPhotoPath, transactionID, UUID.randomUUID().toString());
                     transaction.addFactura(factura);
-                    viewsBinding.recyclerFacturas.getAdapter().notifyItemInserted(transaction.getFacturas().size() - 1);
+                    Log.i("TAG", "onActivityResult: adding photo");
+                    viewsBinding.recyclerFacturas.getAdapter().notifyDataSetChanged(/*transaction.getFacturas().size() - 1*/);
                 } else if (resultCode != RESULT_CANCELED) {
                     Snackbar.make(viewsBinding.transactionToolbar, R.string.image_selector_error, Snackbar.LENGTH_SHORT).show();
                 }
@@ -736,6 +732,18 @@ public class NewTransactionActivity extends AppCompatActivity {
         }
     }
 
+    private class NewTransactionBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case TRANSACTIONS_UPDATED:
+                    NewTransactionActivity.this.finish();
+                    break;
+                case NewCategoryActivity.CATEGORIA_INSERTADA_COMPLETO:
+                    pendingChange = true;
+            }
+        }
+    }
 
     /**
      * END OF FACTURAS FILES HANDLING
@@ -804,7 +812,7 @@ public class NewTransactionActivity extends AppCompatActivity {
                                                 .getFilePath()).delete();
                                         viewsBinding.recyclerFacturas.getAdapter().notifyItemRemoved(holder.getAdapterPosition());
                                     }
-                        })
+                                })
                                 .setPositiveButton(R.string.continuar, null)
                                 .create().show();
                     }
@@ -841,9 +849,9 @@ public class NewTransactionActivity extends AppCompatActivity {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            ImageView imageView;
             public String idFactura;
             public String filePath;
+            ImageView imageView;
 
 
             ViewHolder(View itemView) {

@@ -107,6 +107,11 @@ public class Transaction implements Parcelable {
         this.category = category;
     }
 
+    /**
+     * Creates a copy of the Transaction. This copy will should be used to modify repeated transactions
+     * in memory.
+     * @return The copy of the Transaction
+     */
     public Transaction copy() {
         Transaction transaction = new Transaction();
         transaction.setId(this.id);
@@ -121,7 +126,7 @@ public class Transaction implements Parcelable {
         transaction.setRepeatInfoId(this.repeatInfoId);
         transaction.setReminderId(this.reminderId);
         transaction.setDeviceId(this.deviceId);
-        transaction.setOriginalTransactionId(this.id);
+        transaction.setOriginalTransactionId(this.originalTransactionId);
         transaction.setFacturasId(this.facturasId);
         return transaction;
     }
@@ -150,6 +155,12 @@ public class Transaction implements Parcelable {
         return transaction;
     }
 
+    /**
+     * Crea una lista de transacciones que seran insertadas en la base de datos, como parte de las
+     * transacciones repetidas
+     * @param dbmanager El DatabaseManager para obtener MetaData (Se puede simplificar)
+     * @return La lista creada
+     */
     public List<Transaction> getRepeatingTransactions(DatabaseManager dbmanager) {
 
         if (this.repeatInfo != null && this.repeatInfo.getInterval() > 0) {
@@ -166,7 +177,6 @@ public class Transaction implements Parcelable {
                     difference = DateTimeUtils.monthsBetween(this.repeatInfo.getStartDate(), endDate);
                     break;
                 case TYPE_IRREGULAR:
-
                     return createIrregularInterval(DateTimeUtils.clone(this.date));
             }
             difference /= this.repeatInfo.getInterval();
@@ -179,6 +189,7 @@ public class Transaction implements Parcelable {
     }
 
     private ArrayList<Transaction> createIrregularInterval(Calendar transactionDate) {
+        //TODO: Repasar funcionalidad y que este funcionando bien.
         ArrayList<Transaction> transactions = new ArrayList<>();
         int difference;
         Transaction transaction = copy();
@@ -247,6 +258,7 @@ public class Transaction implements Parcelable {
         transaction.setId(UUID.randomUUID().toString());
         transaction.setDate(DateTimeUtils.clone(transactionDate));
         transaction.setForecasted(today.compareTo(transaction.getDate()) == TRANSACTION_TYPE_ALL_TRANSACTIONS /*-1*/);
+        transaction.setOriginalTransactionId(this.id);
         return transaction;
     }
 
@@ -265,7 +277,6 @@ public class Transaction implements Parcelable {
             }
 //            transaction.setDate(DateTimeUtils.clone(transactionDate));
 //            transaction.setForecasted(today.compareTo(transaction.getDate()) == TRANSACTION_TYPE_ALL_TRANSACTIONS /*-1*/);
-//            transaction.setOriginalTransactionId(this.id);
             transactions.add(formatTransaction(transactionDate, transaction, today));
         }
         return transactions;
@@ -596,6 +607,9 @@ public class Transaction implements Parcelable {
     }
 
     public List<Factura> getFacturas() {
+        if (facturas != null && facturas.size() >0) {
+            facturas.remove(0);
+        }
         return facturas;
     }
 
