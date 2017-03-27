@@ -1,0 +1,16 @@
+Index: app/src/main/res/layout/new_activity_new_transaction.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/new_activity_new_transaction.xml	(revision )
++++ app/src/main/res/layout/new_activity_new_transaction.xml	(revision )
+@@ -103,6 +103,8 @@
+                     android:layout_alignParentStart="true"
+                     android:layout_alignParentLeft="true"
+                     tools:listheader="@layout/spinner_dropdown_item"
++                    tools:listitem="@layout/spinner_dropdown_item"
++                    tools:listfooter="@layout/spinner_dropdown_item"
+                     />
+ 
+                 <ToggleButton

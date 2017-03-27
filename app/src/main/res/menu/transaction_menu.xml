@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+
+    <item
+        android:id="@+id/add_new_transaction"
+        android:orderInCategory="100"
+        android:title="@string/boton_add_transaction"
+        app:showAsAction="always" />
+    <item android:title="@string/categories"
+        android:onClick="categoriesPopup" />
+
+
+</menu>

@@ -1,0 +1,88 @@
+<resources>
+    <string name="app_name">PlataP</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="force_crash">Force Crash!</string>
+    <string name="category_icon">Category Icon</string>
+    <string name="default_calendar_name">Default</string>
+    <string name="monday" translatable="false">MONDAy</string>
+    <string name="sunday" translatable="false">SuNdAy</string>
+    <string name="boton_add_transaction">Add new Transaction</string>
+    <string name="boton_modificar_transaction">Modify Transaction</string>
+    <string name="borrar">Delete</string>
+    <string name="cancelar">Cancel</string>
+    <string name="detalles_de_transaction">Transaction´s details</string>
+    <string name="modificar">Modify</string>
+    <string name="new_transaction_title">Transaction Details</string>
+    <string name="modify_transaction_title">Change transaction</string>
+    <string name="nada">Nada</string>
+    <string name="add_new_category">Add New Category</string>
+    <string name="Gasto">Expense</string>
+    <string name="Income">Income</string>
+    <string name="fecha_escoger">Choose the date:</string>
+    <string name="error_zero_amount">The amount of the transaction cannot be zero.</string>
+    <string name="monto_error_msg">We´ve got nothing here.</string>
+    <string name="error_format_number">That´s not a valid number</string>
+    <string name="no_transaction_on_day">There are no transactions for this day. You can add a new transaction using the button on the corner below</string>
+    <string name="undo">Undo</string>
+    <string name="category">Category</string>
+    <string name="price">Amount</string>
+    <string name="note">Note</string>
+    <string name="add_note">Add Note:</string>
+    <string name="not_supported_yet">Not Supported Yet</string>
+    <string name="repetition">Repeating:</string>
+    <string name="add_notification">Add Notification</string>
+    <string name="calendarios">Calendars</string>
+    <string name="add_new_calendar">Add new calendar</string>
+    <string name="delete_warning">The transaction has been deleted</string>
+    <string name="new_category_name">New Category Name</string>
+    <string name="create_category">Create category</string>
+    <string name="icons">Icons</string>
+    <string name="colors">Colors</string>
+    <string name="modify_categories">Modify a category</string>
+    <string name="categories">Categories</string>
+    <string name="select_a_category">Select a category to edit</string>
+    <string name="continuar">Continue</string>
+    <string name="delete_category">Delete this category!</string>
+    <string name="category_delete_warning">This will delete also all the transactions with these category</string>
+    <string name="android_studio" translatable="false">PlataP</string>
+    <string name="dev_email" translatable="false">neryortez@gmail.com</string>
+    <string name="message_category_select">Select a kind of category you want to create</string>
+    <string name="save_category">Save Category</string>
+    <string name="delete_factura">Delete</string>
+    <string name="image_selector_error">ERROR CHOOSING A SAVED IMAGE</string>
+    <string name="facturas">Recipes images:</string>
+    <string name="factura">Recipe</string>
+    <string name="new_calendar_name">New calendar name</string>
+    <string name="error_category_name">Name should have more than three letters</string>
+    <string name="delete">DELETE</string>
+    <string name="delete_calendar_warning">This will delete the calendar and all transactions thereof</string>
+    <string name="initial_balance">Initial balance...</string>
+    <string name="edit_calendars">Edit These Calendar</string>
+    <string name="save_button">Save</string>
+    <string name="delete_repeating_warning">se va a borrar repetido</string>
+    <string name="borrar_todos">Delete Everithing</string>
+    <string name="delete_just_this">Only this</string>
+    <string name="confirmar">effectuate</string>
+    <string-array name="repetition_array">
+        <item>None</item>
+        <item>Daily</item>
+        <item>Every Other Day</item>
+        <item>Every Weekday</item>
+        <item>Every Weekend</item>
+        <item>Once a week</item>
+        <item>Every Other Week</item>
+        <item>Once a Month</item>
+    </string-array>
+    <string-array name="category_new_select" >
+        <item>Income</item>
+        <item>Expense</item>
+    </string-array>
+    <string-array name="new_factura_options">
+        <item>Take Picture</item>
+        <item>Select an Image</item>
+    </string-array>
+</resources>

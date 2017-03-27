@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PlataP</string>
+    <string name="action_settings">Configuracion</string>
+    <string name="navigation_drawer_close">Cerrar navegador</string>
+    <string name="force_crash">Que se rompa!</string>
+    <string name="navigation_drawer_open">Abrir navegador</string>
+    <string name="boton_modificar_transaction">Modificar Transacción</string>
+    <string name="boton_add_transaction">Agregar Transacción</string>
+    <string name="category_icon">Icono de la Categoría</string>
+    <string name="default_calendar_name">Predeterminado</string>
+    <string name="detalles_de_transaction">Detalles del movimiento.</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="modificar">Modificar</string>
+    <string name="borrar">Borrar</string>
+    <string name="Gasto">Gasto</string>
+    <string name="Income">Entrada</string>
+    <string name="add_new_category">Agregar Categoría</string>
+    <string name="error_zero_amount">El monto no puede ser cero.</string>
+    <string name="fecha_escoger">Escoge una fecha:</string>
+    <string name="modify_transaction_title">Modificar transacción</string>
+    <string name="nada">NADA</string>
+    <string name="new_transaction_title">Detalles de la Transacción</string>
+    <string name="monto_error_msg">Ponele plata aquí hombre…!</string>
+    <string name="error_format_number">Ese no es un número válido.</string>
+    <string name="no_transaction_on_day">No hay movimientos para este día. Puedes agregar movimientos pulsando el boton en la esquina inferior de tu pantalla.</string>
+    <string name="undo">Deshacer</string>
+    <string name="add_note">Agregar Nota</string>
+    <string name="add_notification">Agregar Notificacion</string>
+    <string name="category">Categoría</string>
+    <string name="not_supported_yet">No funciona (aún)</string>
+    <string name="note">Nota</string>
+    <string name="price">Cantidad</string>
+    <string name="repetition">Repetir:</string>
+    <string-array name="repetition_array">
+        <item>Ninguno</item>
+        <item>Diariamente</item>
+        <item>Día de por medio</item>
+        <item>Días de semana</item>
+        <item>Fines de semana</item>
+        <item>Semanalmente</item>
+        <item>Cada dos semanas</item>
+        <item>Mensualmente</item>
+    </string-array>
+    <string name="calendarios">Calendarios</string>
+    <string name="add_new_calendar">Crear Nuevo Calendario</string>
+    <string name="delete_warning">El movimiento ha sido eliminado</string>
+    <string name="new_category_name">Nombre</string>
+    <string name="colors">Colores</string>
+    <string name="create_category">Crear Categoría</string>
+    <string name="icons">Iconos</string>
+    <string name="modify_categories">Modificar categoría</string>
+    <string name="categories">Categorias</string>
+    <string name="continuar">Continuar</string>
+    <string name="select_a_category">Seleccionar una categoría</string>
+    <string name="delete_category">Eliminar categoría</string>
+    <string name="category_delete_warning">Esta acción eliminará todas los movimientos con esta categoría.</string>
+    <string name="message_category_select">Seleccione el tipo de categoría que desea crear</string>
+    <string name="save_category">Guardar</string>
+    <string-array name="category_new_select" >
+        <item>Entrada</item>
+        <item>Gasto</item>
+    </string-array>
+    <string-array name="new_factura_options">
+        <item>Tomar foto</item>
+        <item>Seleccionar Imagen Guardada</item>
+    </string-array>
+    <string name="delete_factura">Eliminar</string>
+    <string name="image_selector_error">ERROR SELECCIONANDO IMAGEN</string>
+    <string name="facturas">Imagenes de Facturas:</string>
+    <string name="factura">Factura</string>
+    <string name="new_calendar_name">Nombre del nuevo calendario</string>
+</resources>
