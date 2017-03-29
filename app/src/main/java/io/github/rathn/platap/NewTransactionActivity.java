@@ -100,22 +100,22 @@ public class NewTransactionActivity extends AppCompatActivity {
     private CompoundButton.OnCheckedChangeListener toggleListener = new CompoundButton.OnCheckedChangeListener() {
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             spinnerAdapter.clear();
-            viewsBinding.spinner.setSelection(0, true);
+            viewsBinding.headerInput.spinner.setSelection(0, true);
             if (isChecked) {
                 spinnerAdapter.addAll(databaseManager.getIncomeCategories());
-                String prev = viewsBinding.monto.getText().toString();
+                String prev = viewsBinding.headerInput.monto.getText().toString();
                 if (prev.startsWith("-")) {
-                    viewsBinding.monto.setText(prev.substring(1));
+                    viewsBinding.headerInput.monto.setText(prev.substring(1));
                 }
             } else {
                 spinnerAdapter.addAll(databaseManager.getExpenseCategories());
-                String prev = viewsBinding.monto.getText().toString();
+                String prev = viewsBinding.headerInput.monto.getText().toString();
                 if (!prev.contains("-")) {
                     try {
                         String nuevo = "-" + prev;
-                        viewsBinding.monto.setText(nuevo);
+                        viewsBinding.headerInput.monto.setText(nuevo);
                     } catch (IndexOutOfBoundsException e) {
-                        viewsBinding.monto.setText("-0.0");
+                        viewsBinding.headerInput.monto.setText("-0.0");
                     }
                 }
             }
@@ -152,16 +152,16 @@ public class NewTransactionActivity extends AppCompatActivity {
 
                 if (isExpense) prev = "-" + prev;
                 s.replace(0, s.length(), prev);
-            } else if (s.toString().isEmpty() && !viewsBinding.toggleButton.isChecked()) { /** Evitar qeu borren el '-' si es en gastos */
+            } else if (s.toString().isEmpty() && !viewsBinding.headerInput.toggleButton.isChecked()) { /** Evitar qeu borren el '-' si es en gastos */
                 s.append("-");
-            } else if (s.toString().contains("-") && viewsBinding.toggleButton.isChecked()) { /** Evitar que pongan '-' si es entrada */
+            } else if (s.toString().contains("-") && viewsBinding.headerInput.toggleButton.isChecked()) { /** Evitar que pongan '-' si es entrada */
                 s.replace(0, s.length(), s.toString(), 1, s.length());
-            } else if (!s.toString().contains("-") && !viewsBinding.toggleButton.isChecked()) { /** Evitar que numeros positivos en gastos */
+            } else if (!s.toString().contains("-") && !viewsBinding.headerInput.toggleButton.isChecked()) { /** Evitar que numeros positivos en gastos */
                 s.replace(0, s.length(), "-" + s.toString(), 0, s.length() + 1);
             } /*else if ( prev.isEmpty() ){                                           *//** Evitar numeros vacios *//*
-                s.replace(0, s.length(), viewsBinding.toggleButton.isChecked() ? "0" : "-0");
+                s.replace(0, s.length(), viewsBinding.headerInput.toggleButton.isChecked() ? "0" : "-0");
             }*/
-            viewsBinding.textInputLayout.setErrorEnabled(false);
+            viewsBinding.headerInput.textInputLayout.setErrorEnabled(false);
         }
     };
     private RepeatInfo repeatInfo;
@@ -171,19 +171,19 @@ public class NewTransactionActivity extends AppCompatActivity {
             //<editor-fold desc="Process to add a new transaction, change the transaction, get the information from the activity up to the point of calling the databaseManager">
             Float aFloat;
             try {
-                aFloat = Float.valueOf(viewsBinding.monto.getText().toString());
+                aFloat = Float.valueOf(viewsBinding.headerInput.monto.getText().toString());
             } catch (NumberFormatException e) {
-                Snackbar.make(viewsBinding.toggleButton, R.string.error_format_number, Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(viewsBinding.headerInput.toggleButton, R.string.error_format_number, Snackbar.LENGTH_SHORT).show();
                 return;
             }
             if (aFloat == 0f) {
-                viewsBinding.textInputLayout.setError(getString(R.string.monto_error_msg));
-                requestFocus(viewsBinding.monto);
-                Snackbar.make(viewsBinding.toggleButton, R.string.error_zero_amount, Snackbar.LENGTH_SHORT).show();
+                viewsBinding.headerInput.textInputLayout.setError(getString(R.string.monto_error_msg));
+                requestFocus(viewsBinding.headerInput.monto);
+                Snackbar.make(viewsBinding.headerInput.toggleButton, R.string.error_zero_amount, Snackbar.LENGTH_SHORT).show();
             } else {
                 transaction.setCalendar(calendar);
 //                t.setCategory(databaseManager.getFirstExepenseCategory());
-                transaction.setPrice(Double.parseDouble(viewsBinding.monto.getText().toString()));
+                transaction.setPrice(Double.parseDouble(viewsBinding.headerInput.monto.getText().toString()));
                 if (!isChanging) {
                     transaction.setId(transactionID);
                 } else {
@@ -348,11 +348,11 @@ public class NewTransactionActivity extends AppCompatActivity {
         databaseManager.open();
         if (pendingChange) {
             pendingChange = false;
-            ((SpinnerAdapter) viewsBinding.spinner.getAdapter()).clear();
-            if (viewsBinding.toggleButton.isChecked()) {
-                ((SpinnerAdapter) viewsBinding.spinner.getAdapter()).addAll(databaseManager.getIncomeCategories());
+            ((SpinnerAdapter) viewsBinding.headerInput.spinner.getAdapter()).clear();
+            if (viewsBinding.headerInput.toggleButton.isChecked()) {
+                ((SpinnerAdapter) viewsBinding.headerInput.spinner.getAdapter()).addAll(databaseManager.getIncomeCategories());
             } else {
-                ((SpinnerAdapter) viewsBinding.spinner.getAdapter()).addAll(databaseManager.getExpenseCategories());
+                ((SpinnerAdapter) viewsBinding.headerInput.spinner.getAdapter()).addAll(databaseManager.getExpenseCategories());
             }
         }
     }
@@ -375,12 +375,12 @@ public class NewTransactionActivity extends AppCompatActivity {
         // Specify the layout to use when the list of choices appears
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
-        viewsBinding.toggleButton.setOnCheckedChangeListener(toggleListener);
+        viewsBinding.headerInput.toggleButton.setOnCheckedChangeListener(toggleListener);
 
 //        boton = ((Button) findViewById(R.id.button));
 //        boton.setOnClickListener(addNewTransaction);
 
-        viewsBinding.monto.addTextChangedListener(textWatcher);
+        viewsBinding.headerInput.monto.addTextChangedListener(textWatcher);
 
 //        datePicker = ((DatePicker) findViewById(R.id.datePicker));
         viewsBinding.calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
@@ -407,10 +407,10 @@ public class NewTransactionActivity extends AppCompatActivity {
                 Calendar date = transaction != null ? transaction.getDate() : null;
                 assert date != null;
                 viewsBinding.calendarView.setDate(date.getTimeInMillis());
-                viewsBinding.monto.setText(String.valueOf(((float) transaction.getPrice())));
+                viewsBinding.headerInput.monto.setText(String.valueOf(((float) transaction.getPrice())));
                 isChanging = true;
                 viewsBinding.note.getEditText().setText(transaction.getNote());
-                viewsBinding.toggleButton.setChecked(!transaction.isExpense());
+                viewsBinding.headerInput.toggleButton.setChecked(!transaction.isExpense());
                 calendar = databaseManager.getCalendarWithId(transaction.getCalendarId());
                 repeatInfo = getIntent().getExtras().getParcelable(REPEATINFO_OF_TRANSACTION);
                 transaction.setRepeatInfo(repeatInfo);
@@ -440,14 +440,14 @@ public class NewTransactionActivity extends AppCompatActivity {
 
 
         // Apply the adapter to the spinner
-        viewsBinding.spinner.setAdapter(spinnerAdapter);
-        viewsBinding.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        viewsBinding.headerInput.spinner.setAdapter(spinnerAdapter);
+        viewsBinding.headerInput.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Category cat = ((Category) parent.getItemAtPosition(position));
                 if (cat.getId().equals(SpinnerAdapter.ADD_NEW_CATEGORY_ID)) {
                     Intent intent = new Intent(getApplicationContext(), NewCategoryActivity.class);
-                    intent.putExtra(NewCategoryActivity.IS_EXPENSE, !viewsBinding.toggleButton.isChecked());
+                    intent.putExtra(NewCategoryActivity.IS_EXPENSE, !viewsBinding.headerInput.toggleButton.isChecked());
                     startActivity(intent);
                 }
             }
@@ -467,7 +467,7 @@ public class NewTransactionActivity extends AppCompatActivity {
         viewsBinding.repetitionSpinner.setOnItemSelectedListener(repeatClickListener);//</editor-fold>
 
         //<editor-fold desc="unfatefull try of set the OnItemLongClickL Listener of the category spinner">
-        //        viewsBinding.spinner.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        //        viewsBinding.headerInput.spinner.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 //            @Override
 //            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 //                Category cat = ((Category) parent.getItemAtPosition(position));
@@ -497,7 +497,7 @@ public class NewTransactionActivity extends AppCompatActivity {
             }
             for (Category cat : cats) {
                 if (cat.getId().equals(transaction.getCategoryId())) {
-                    viewsBinding.spinner.setSelection(cats.indexOf(cat), true);
+                    viewsBinding.headerInput.spinner.setSelection(cats.indexOf(cat), true);
                     break;
                 }
             }
@@ -540,9 +540,9 @@ public class NewTransactionActivity extends AppCompatActivity {
         }
         transaction.setForecasted(fore);
         transaction.setDate(d);
-        transaction.setCategory((Category) viewsBinding.spinner.getSelectedItem());
+        transaction.setCategory((Category) viewsBinding.headerInput.spinner.getSelectedItem());
         transaction.setNote(viewsBinding.note.getEditText().getText().toString());
-        transaction.setExpense(!viewsBinding.toggleButton.isChecked());
+        transaction.setExpense(!viewsBinding.headerInput.toggleButton.isChecked());
         if (repeatInfo != null) {
             repeatInfo.setStartDate(transaction.getDate());
             if (!isChanging) {
